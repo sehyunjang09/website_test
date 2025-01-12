@@ -6,10 +6,13 @@ const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// 원의 정보 설정 (커진 반원 형태)
+// 원의 이미지 설정
+const circleImage = document.getElementById('circleImage');
+
+// 원의 위치와 크기 설정 (이미지 크기 및 위치 수정)
 const circle = {
     x: canvas.width / 2,      // 원의 중심 X 좌표
-    y: canvas.height - 50,    // 원의 중심 Y 좌표 (화면 하단에서 50px)
+    y: canvas.height - 150,   // 원의 중심 Y 좌표 (화면 하단에서 150px 위치)
     radius: canvas.width / 2  // 원의 반지름 (화면의 절반 크기)
 };
 
@@ -92,24 +95,33 @@ class Dot {
 }
 
 const dots = [];
+let lastMousePos = { x: 0, y: 0 };  // 이전 마우스 위치
+let totalDistance = 0;  // 이동 거리
 
-// 마우스 위치에서 점을 생성하여 배열에 추가
+// 마우스 이동 이벤트 핸들러
 canvas.addEventListener('mousemove', (e) => {
-    const numberOfDots = 5; // 마우스 위치에서 생성할 점의 수
-    for (let i = 0; i < numberOfDots; i++) {
-        dots.push(new Dot(e.x, e.y));
+    // 이전 마우스 위치와의 거리 계산
+    const dx = e.x - lastMousePos.x;
+    const dy = e.y - lastMousePos.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    // 일정 거리 이상 이동했을 때 점 생성
+    if (distance > 20) {  // 20px 이상 이동 시
+        dots.push(new Dot(e.x, e.y));  // 점 생성
+        totalDistance = 0;  // 이동 거리 초기화
     }
+
+    // 이동 거리 누적
+    totalDistance += distance;
+    lastMousePos = { x: e.x, y: e.y };  // 마지막 마우스 위치 업데이트
 });
 
 // 애니메이션 루프
 function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height); // 캔버스를 지우기
 
-    // 원 그리기 (반원 형태로)
-    ctx.beginPath();
-    ctx.arc(circle.x, circle.y, circle.radius, Math.PI, 0, true); // 반원만 그리기
-    ctx.fillStyle = '#ddd';
-    ctx.fill();
+    // 원 이미지 그리기 (수정된 위치와 크기)
+    ctx.drawImage(circleImage, circle.x - circle.radius, circle.y - circle.radius, circle.radius * 2, circle.radius * 2);
 
     // 배열에서 점을 업데이트하고, 두 번 떨어진 후 삭제 처리
     for (let i = dots.length - 1; i >= 0; i--) {
