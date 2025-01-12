@@ -6,11 +6,11 @@ const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// 원의 정보 설정
+// 원의 정보 설정 (커진 반원 형태)
 const circle = {
-    x: canvas.width / 2,    // 원의 중심 X 좌표
-    y: canvas.height - 100,  // 원의 중심 Y 좌표 (화면 하단에서 100px)
-    radius: 50              // 원의 반지름
+    x: canvas.width / 2,      // 원의 중심 X 좌표
+    y: canvas.height - 50,    // 원의 중심 Y 좌표 (화면 하단에서 50px)
+    radius: canvas.width / 2  // 원의 반지름 (화면의 절반 크기)
 };
 
 // 점 객체 생성
@@ -19,14 +19,17 @@ class Dot {
         this.x = x;
         this.y = y;
         this.size = Math.random() * 5 + 2; // 점 크기
-        this.speedY = Math.random() * 2 + 1; // 떨어지는 속도
+        this.speedX = Math.random() * 4 - 2; // X 속도
+        this.speedY = Math.random() * 4 - 2; // Y 속도
         this.color = `hsl(${Math.random() * 360}, 100%, 50%)`; // 랜덤 색상
         this.fallCount = 0; // 점이 떨어진 횟수
     }
 
     // 점을 업데이트하고 그리기
     update() {
-        this.y += this.speedY; // Y축으로 떨어짐
+        this.x += this.speedX; // X축으로 이동
+        this.y += this.speedY; // Y축으로 이동
+
         if (this.fallCount < 2) {
             // 점이 두 번까지 떨어진 후 다시 위로 올라가게 함
             if (this.y > canvas.height) {
@@ -42,8 +45,7 @@ class Dot {
 
         // 충돌 체크: 점이 원과 충돌했는지 확인
         if (this.checkCollision(circle)) {
-            this.speedY = -this.speedY; // Y속도를 반전시켜 점이 튕기도록
-            this.y = circle.y - circle.radius - this.size; // 원 위에 정확히 위치시킴
+            this.handleBounce(circle); // 충돌 시 자연스럽게 튕김
         }
 
         // 점 그리기
@@ -63,6 +65,30 @@ class Dot {
         // 충돌: 점과 원 사이의 거리가 원의 반지름 + 점의 크기보다 작으면
         return distance <= circle.radius + this.size;
     }
+
+    // 충돌 후 자연스러운 반사 처리 함수
+    handleBounce(circle) {
+        // 점과 원의 중심 간 벡터를 계산
+        const dx = this.x - circle.x;
+        const dy = this.y - circle.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // 법선 벡터 계산
+        const normalX = dx / distance;
+        const normalY = dy / distance;
+
+        // 점의 속도 벡터와 법선 벡터의 내적 계산
+        const dotProduct = this.speedX * normalX + this.speedY * normalY;
+
+        // 반사 벡터 계산: 속도 벡터에서 법선 벡터를 빼는 방식
+        this.speedX -= 2 * dotProduct * normalX;
+        this.speedY -= 2 * dotProduct * normalY;
+
+        // 충돌 후 점을 원의 경계에 맞추기
+        const overlap = (circle.radius + this.size) - distance;
+        this.x += normalX * overlap;
+        this.y += normalY * overlap;
+    }
 }
 
 const dots = [];
@@ -79,9 +105,9 @@ canvas.addEventListener('mousemove', (e) => {
 function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height); // 캔버스를 지우기
 
-    // 원 그리기
+    // 원 그리기 (반원 형태로)
     ctx.beginPath();
-    ctx.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2);
+    ctx.arc(circle.x, circle.y, circle.radius, Math.PI, 0, true); // 반원만 그리기
     ctx.fillStyle = '#ddd';
     ctx.fill();
 
