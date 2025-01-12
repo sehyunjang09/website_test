@@ -1,11 +1,58 @@
-// 마우스 위치를 추적하여 배경이 움직이게 함
-document.addEventListener("mousemove", function(e) {
-    const background = document.querySelector(".background");
+// 캔버스 설정
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
 
-    // 마우스의 X, Y 위치를 비율로 계산하여 배경 이동
-    const x = (e.clientX / window.innerWidth) * 100;
-    const y = (e.clientY / window.innerHeight) * 100;
+// 캔버스 크기 설정
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-    // 배경을 마우스에 맞춰 이동시킴
-    background.style.transform = `translate(-${x}%, -${y}%)`;
+// 점 객체 생성
+class Dot {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.size = Math.random() * 5 + 2; // 점 크기
+        this.speedY = Math.random() * 2 + 1; // 떨어지는 속도
+        this.color = `hsl(${Math.random() * 360}, 100%, 50%)`; // 랜덤 색상
+    }
+
+    // 점을 업데이트하고 그리기
+    update() {
+        this.y += this.speedY; // Y축으로 떨어짐
+
+        // 화면을 벗어난 점들은 다시 위로 올라가게끔
+        if (this.y > canvas.height) {
+            this.y = 0;
+            this.x = Math.random() * canvas.width;
+        }
+
+        // 점 그리기
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+    }
+}
+
+const dots = [];
+
+// 마우스 위치에서 점을 생성하여 배열에 추가
+canvas.addEventListener('mousemove', (e) => {
+    const numberOfDots = 5; // 마우스 위치에서 생성할 점의 수
+    for (let i = 0; i < numberOfDots; i++) {
+        dots.push(new Dot(e.x, e.y));
+    }
 });
+
+// 애니메이션 루프
+function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height); // 캔버스를 지우기
+
+    // 각 점을 업데이트하고 그리기
+    dots.forEach(dot => dot.update());
+
+    requestAnimationFrame(animate); // 계속해서 애니메이션을 실행
+}
+
+// 애니메이션 시작
+animate();
