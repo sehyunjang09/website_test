@@ -6,6 +6,13 @@ const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
+// 원의 정보 설정
+const circle = {
+    x: canvas.width / 2,    // 원의 중심 X 좌표
+    y: canvas.height - 100,  // 원의 중심 Y 좌표 (화면 하단에서 100px)
+    radius: 50              // 원의 반지름
+};
+
 // 점 객체 생성
 class Dot {
     constructor(x, y) {
@@ -33,12 +40,28 @@ class Dot {
             }
         }
 
+        // 충돌 체크: 점이 원과 충돌했는지 확인
+        if (this.checkCollision(circle)) {
+            this.speedY = -this.speedY; // Y속도를 반전시켜 점이 튕기도록
+            this.y = circle.y - circle.radius - this.size; // 원 위에 정확히 위치시킴
+        }
+
         // 점 그리기
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fillStyle = this.color;
         ctx.fill();
         return false; // 삭제하지 않음
+    }
+
+    // 점과 원의 충돌 체크 함수
+    checkCollision(circle) {
+        const dx = this.x - circle.x;
+        const dy = this.y - circle.y;
+        const distance = Math.sqrt(dx * dx + dy * dy); // 점과 원의 중심 사이의 거리
+
+        // 충돌: 점과 원 사이의 거리가 원의 반지름 + 점의 크기보다 작으면
+        return distance <= circle.radius + this.size;
     }
 }
 
@@ -55,6 +78,12 @@ canvas.addEventListener('mousemove', (e) => {
 // 애니메이션 루프
 function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height); // 캔버스를 지우기
+
+    // 원 그리기
+    ctx.beginPath();
+    ctx.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2);
+    ctx.fillStyle = '#ddd';
+    ctx.fill();
 
     // 배열에서 점을 업데이트하고, 두 번 떨어진 후 삭제 처리
     for (let i = dots.length - 1; i >= 0; i--) {
