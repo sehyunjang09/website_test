@@ -14,16 +14,23 @@ class Dot {
         this.size = Math.random() * 5 + 2; // 점 크기
         this.speedY = Math.random() * 2 + 1; // 떨어지는 속도
         this.color = `hsl(${Math.random() * 360}, 100%, 50%)`; // 랜덤 색상
+        this.fallCount = 0; // 점이 떨어진 횟수
     }
 
     // 점을 업데이트하고 그리기
     update() {
         this.y += this.speedY; // Y축으로 떨어짐
-
-        // 화면을 벗어난 점들은 다시 위로 올라가게끔
-        if (this.y > canvas.height) {
-            this.y = 0;
-            this.x = Math.random() * canvas.width;
+        if (this.fallCount < 2) {
+            // 점이 두 번까지 떨어진 후 다시 위로 올라가게 함
+            if (this.y > canvas.height) {
+                this.y = 0;
+                this.fallCount++; // 떨어진 횟수 증가
+            }
+        } else {
+            // 두 번 떨어진 후 점을 삭제할 수 있도록 처리
+            if (this.y > canvas.height) {
+                return true; // 삭제 표시
+            }
         }
 
         // 점 그리기
@@ -31,6 +38,7 @@ class Dot {
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fillStyle = this.color;
         ctx.fill();
+        return false; // 삭제하지 않음
     }
 }
 
@@ -48,8 +56,12 @@ canvas.addEventListener('mousemove', (e) => {
 function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height); // 캔버스를 지우기
 
-    // 각 점을 업데이트하고 그리기
-    dots.forEach(dot => dot.update());
+    // 배열에서 점을 업데이트하고, 두 번 떨어진 후 삭제 처리
+    for (let i = dots.length - 1; i >= 0; i--) {
+        if (dots[i].update()) {
+            dots.splice(i, 1); // 점을 배열에서 삭제
+        }
+    }
 
     requestAnimationFrame(animate); // 계속해서 애니메이션을 실행
 }
